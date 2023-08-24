@@ -1,4 +1,4 @@
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.decorators import api_view
 from rest_framework.views import Response
 
@@ -53,3 +53,49 @@ def menu_detail(request, pk, format=None):
     elif request.method == 'DELETE':
         menu_item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MenuItemStaffList(generics.ListCreateAPIView):
+    """
+        List all menu items, or create a new menu item.
+        Only for staff workers / managers etc.
+    """
+    queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+# for customers / couriers
+class MenuItemList(generics.ListAPIView):
+    """
+        List all menu items, or create a new menu item.
+    """
+    queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+#  for staff workers / managers etc.
+class MenuItemDetail(generics.RetrieveUpdateDestroyAPIView):
+    """
+        Retrieve, update or delete a menu item instance.
+        Only for staff workers / managers etc.
+    """
+    queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)

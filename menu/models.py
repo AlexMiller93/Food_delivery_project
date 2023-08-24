@@ -16,8 +16,8 @@ class MenuItem(models.Model):
     published = models.BooleanField(default=False)
 
     # dates // for manager not for customers
-    created = models.DateTimeField(auto_now_add=True)
-    date_edited = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    date_edited = models.DateTimeField(auto_now=True, editable=False)
 
     class Meta:
         ordering = ['category']
