@@ -1,14 +1,20 @@
 from rest_framework import status, generics
-from rest_framework.decorators import api_view
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import Response
 
 from .models import MenuItem
 from .serializers import MenuItemSerializer
+from .permissions import StaffOrReadOnly
 
 
+# https://github.com/ahmetbicer/react-native-delivery-app/tree/master
 # Create your views here.
 
+
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def menu_list(request, format=None):
     """ 
     List all menu items or create a new one
@@ -26,7 +32,8 @@ def menu_list(request, format=None):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
+@api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
+@permission_classes([IsAuthenticated])
 def menu_detail(request, pk, format=None):
     """ 
     Retrieve, update or delete a menu item.
@@ -49,6 +56,14 @@ def menu_detail(request, pk, format=None):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Handles PATCH method
+    elif request.method == 'PATCH':
+        serializer = MenuItemSerializer(menu_item, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     # Handles DELETE method
     elif request.method == 'DELETE':
         menu_item.delete()
@@ -58,44 +73,31 @@ def menu_detail(request, pk, format=None):
 class MenuItemStaffList(generics.ListCreateAPIView):
     """
         List all menu items, or create a new menu item.
-        Only for staff workers / managers etc.
+        For staff workers / managers etc.
     """
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated | StaffOrReadOnly]
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
-
-# for customers / couriers
 class MenuItemList(generics.ListAPIView):
     """
         List all menu items, or create a new menu item.
+        For staff customers / couriers
     """
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
 
-
-#  for staff workers / managers etc.
 class MenuItemDetail(generics.RetrieveUpdateDestroyAPIView):
     """
         Retrieve, update or delete a menu item instance.
-        Only for staff workers / managers etc.
+        For staff workers / managers etc.
     """
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated | StaffOrReadOnly]
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)

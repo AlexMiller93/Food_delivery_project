@@ -1,5 +1,6 @@
-from datetime import date
+from datetime import datetime
 
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import MenuItem
 
@@ -17,9 +18,6 @@ class MenuItemSerializer(serializers.Serializer):
     # volume = serializers.IntegerField()
     published = serializers.BooleanField(default=False)
 
-    # dates // for manager not for customers
-    # created = serializers.DateTimeField()
-    # date_edited = serializers.DateTimeField()
 
     class Meta:
         model = MenuItem
@@ -31,7 +29,20 @@ class MenuItemSerializer(serializers.Serializer):
         """ 
         Create and return a new MenuItem instance, given the validated data.
         """
-        return MenuItem.objects.create(**validate_data)
+
+        menu_item = MenuItem(
+            food_name=validate_data["food_name"],
+            kitchen=validate_data["kitchen"],
+            category=validate_data["category"],
+            description=validate_data["description"],
+            rating=validate_data["rating"],
+            price=validate_data["price"],
+            weight=validate_data["weight"],
+            created_at=datetime.now(),
+
+        )
+        menu_item.save()
+        return menu_item
 
     def update(self, instance, validated_data):
         """ 
@@ -47,6 +58,8 @@ class MenuItemSerializer(serializers.Serializer):
         instance.weight = validated_data.get('weight', instance.weight)
         instance.volume = validated_data.get('volume', instance.volume)
         instance.published = validated_data.get('published', instance.published)
-        # instance.date_edited = validated_data.get('date_edited', instance.date_edited)
+        # instance.date_edited = datetime.now(),
         instance.save()
         return instance
+
+

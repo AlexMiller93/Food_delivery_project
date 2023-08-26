@@ -15,9 +15,6 @@ class MenuItem(models.Model):
     volume = models.PositiveSmallIntegerField(blank=True, null=True)
     published = models.BooleanField(default=False)
 
-    # dates // for manager not for customers
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-    date_edited = models.DateTimeField(auto_now=True, editable=False)
 
     class Meta:
         ordering = ['category']
