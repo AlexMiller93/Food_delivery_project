@@ -6,7 +6,7 @@ from rest_framework.views import Response
 
 from .models import MenuItem
 from .serializers import MenuItemSerializer
-from .permissions import StaffOrReadOnly
+from accounts.permissions import StaffOrReadOnly
 
 
 # https://github.com/ahmetbicer/react-native-delivery-app/tree/master

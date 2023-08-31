@@ -47,9 +47,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',  # 3rd party
+    'rest_framework.authtoken',
+    'drf_spectacular',
 
-    'menu',  # apps
-    'accounts',
+    'menu.apps.MenuConfig',  # apps
+    'accounts.apps.AccountsConfig',
 ]
 
 REST_FRAMEWORK = {
@@ -60,12 +62,16 @@ REST_FRAMEWORK = {
 
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAdminUser',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    ]
+
+    ],
+
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
 }
 
 MIDDLEWARE = [
