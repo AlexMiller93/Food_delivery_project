@@ -7,3 +7,5 @@ from accounts.models import Account, Card
 
 admin.site.register(Account)
 admin.site.register(Card)
+
+

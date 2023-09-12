@@ -1,28 +1,62 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import User
+
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
+from rest_framework.validators import ValidationError
 
 from .models import Card, Account
 
 
-class UserSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.ModelSerializer):
+    email = serializers.CharField(max_length=80)
+    username = serializers.CharField(max_length=45)
+    password = serializers.CharField(min_length=8, max_length=20, write_only=True)
+    password1 = serializers.CharField(min_length=8, max_length=20, write_only=True)
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email')
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ["email", "username", "password", "password1"]
 
-        def create(self, validated_data):
-            user = User(
-                username=validated_data['username'],
-                first_name=validated_data['first_name'],
-                last_name=validated_data['last_name'],
-                email=validated_data['email']
-            )
-            user.set_password(validated_data['password'])
-            user.save()
-            Token.objects.create(user=user)
-            return user
+    def validate(self, attrs):
+
+        email_exists = User.objects.filter(email=attrs["email"]).exists()
+        username_exists = User.objects.filter(username=attrs["username"]).exists()
+
+        password = attrs.get('password')
+        password1 = attrs.get('password1')
+
+        if password != password1:
+            raise ValidationError("Passwords doesn't match")
+
+        if email_exists:
+            raise ValidationError("Email has already been used")
+
+        if username_exists:
+            raise ValidationError("Username has already been used")
+
+        return super().validate(attrs)
+
+    def create(self, validated_data):
+        password = validated_data.pop("password1")
+
+        user = super().create(validated_data)
+
+        user.set_password(password)
+
+        user.save()
+
+        Token.objects.create(user=user)
+
+        return user
+
+
+class LoginSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length=30)
+
+    class Meta:
+        model = User
+        fields = ['username', 'password']
 
 
 class CardSerializer(serializers.ModelSerializer):
@@ -31,46 +65,36 @@ class CardSerializer(serializers.ModelSerializer):
         fields = ('id', 'number', 'cvv', 'deadline',)
 
     def create(self, validated_data):
-        card = Card(
-            bank=validated_data['bank'],
-            number=validated_data['number'],
-            cvv=validated_data['cvv'],
-            deadline=validated_data['deadline']
-        )
-
-        card.save()
-        return card
+        return Card(**validated_data)
 
 
 class AccountSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    card = CardSerializer()
+    """
+
+
+    """
+    user = SignUpSerializer(many=True)
+    card = CardSerializer(required=False, many=True)
 
     class Meta:
         model = Account
-        fields = ('id', 'user', 'user_type', 'gender', 'address', 'points', 'card')
+        fields = ['id', 'user', 'user_type', 'gender', 'address', 'points', 'card']
 
     def create(self, validated_data):
-        account = Account(
-            user_type=validated_data['user_type'],
-            gender=validated_data['gender'],
-            address=validated_data['address'],
-        )
-        account.save()
+        user_data = validated_data.pop('user')
+        user = User.objects.create(**user_data)
+        account = Account.objects.create(user=user, **validated_data)
         return account
 
 
-class LoginSerializer(serializers.Serializer):
+class UserLoginSerializer(serializers.Serializer):
     """
     This serializer defines two fields for authentication:
       * username
       * password.
     It will try to authenticate the user with when validated.
     """
-    username = serializers.CharField(
-        label="Username",
-        write_only=True
-    )
+    username = serializers.CharField(label="Username", write_only=True)
     password = serializers.CharField(
         label="Password",
         # This will be used when the DRF browsable API is enabled

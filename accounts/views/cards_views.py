@@ -19,7 +19,7 @@ def check_card_number(number):
     """
     double = 0
     total = 0
-    digits = number
+    digits = str(number)
     for i in range(len(digits) - 1, -1, -1):
         for c in str((double + 1) * int(digits[i])):
             total += int(c)
@@ -72,7 +72,8 @@ def all_user_cards(request: Request):
     elif request.method == 'POST':
         number = request.data['number']
         serializer = CardSerializer(data=request.data)
-        if serializer.is_valid() and validate_card_number(number):
+        # if serializer.is_valid() and validate_card_number(number):
+        if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

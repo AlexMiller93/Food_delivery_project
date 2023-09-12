@@ -11,13 +11,13 @@ urlpatterns = [
     # http://localhost:8000/users/logout
     # http://localhost:8000/users/register
 
-    path('login', LoginView.as_view(), name='user-logout'),
-    # path('logout', LogoutView.as_view(), name='user-logout'),
-    path('register', user_register, name='user-register'),
+    path('register', RegisterUserView.as_view(), name='register'),
+    path('login', LoginView.as_view(), name='login'),
+    path('logout', LogoutView.as_view(), name='logout'),
 
     ### users
     # http://localhost:8000/users/admin
-    path('admin', all_users, name='all-users'),
+    # path('admin', all_users, name='all-users'),
 
     ### accounts
     # http://localhost:8000/users/admin/accounts/
@@ -27,8 +27,10 @@ urlpatterns = [
 
     # http://localhost:8000/users/admin/account/pk/
     # http://localhost:8000/users/account/
+    # http://localhost:8000/users/account/add
     path('admin/account/<int:pk>', get_account, name='get-account'),
     path('account/', account_detail, name='account-detail'),
+    path('account/add', create_account, name='create-account'),
 
     ### cards
     # http://localhost:8000/users/admin/cards/
@@ -36,6 +38,8 @@ urlpatterns = [
     # http://localhost:8000/users/account/card/pk/
     path('admin/cards', all_cards, name='all-cards'),
     path('account/cards/', all_user_cards, name='all-user-cards'),
-    path('account/card/<int:pk>', get_user_card, name='get-user-card'),
+    path('account/cards/<int:pk>', get_user_card, name='get-user-card'),
 
 ]
+
+
