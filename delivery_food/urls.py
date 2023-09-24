@@ -36,9 +36,9 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    path('api-auth/', include('rest_framework.urls'), name='rest_framework'),
+    # path('api-auth/', include('rest_framework.urls'), name='rest_framework'),
 
-    path('api-token-auth/', rest_views.obtain_auth_token, name='api-token-auth'),
+    # path('api-token-auth/', rest_views.obtain_auth_token, name='api-token-auth'),
 
 
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

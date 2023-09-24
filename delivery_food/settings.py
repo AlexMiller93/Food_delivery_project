@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import environ
 
+
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
@@ -64,10 +65,12 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 
-# 'DEFAULT_PERMISSION_CLASSES': [
-    #     'rest_framework.permissions.AllowAny',
-    #     'rest_framework.permissions.IsAdminUser',
-    # ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        # 'rest_framework.permissions.AllowAny',
+        # 'rest_framework.permissions.IsAdminUser',
+    ],
+
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 
 
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',

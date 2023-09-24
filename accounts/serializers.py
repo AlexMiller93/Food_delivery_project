@@ -1,7 +1,9 @@
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import User
 
-from rest_framework import serializers
+
+
+from rest_framework import serializers, status
 from rest_framework.authtoken.models import Token
 from rest_framework.validators import ValidationError
 
@@ -9,8 +11,8 @@ from .models import Card, Account
 
 
 class SignUpSerializer(serializers.ModelSerializer):
-    email = serializers.CharField(max_length=80)
-    username = serializers.CharField(max_length=45)
+    email = serializers.EmailField(max_length=50)
+    username = serializers.CharField(min_length=5, max_length=25)
     password = serializers.CharField(min_length=8, max_length=20, write_only=True)
     password1 = serializers.CharField(min_length=8, max_length=20, write_only=True)
 
@@ -27,13 +29,19 @@ class SignUpSerializer(serializers.ModelSerializer):
         password1 = attrs.get('password1')
 
         if password != password1:
-            raise ValidationError("Passwords doesn't match")
+            raise ValidationError(
+                detail="Passwords doesn't match", code=status.HTTP_403_FORBIDDEN
+            )
 
         if email_exists:
-            raise ValidationError("Email has already been used")
+            raise ValidationError(
+                detail="Email has already been used", code=status.HTTP_403_FORBIDDEN
+            )
 
         if username_exists:
-            raise ValidationError("Username has already been used")
+            raise ValidationError(
+                detail="Username has already been used", code=status.HTTP_403_FORBIDDEN
+            )
 
         return super().validate(attrs)
 
@@ -41,12 +49,8 @@ class SignUpSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password1")
 
         user = super().create(validated_data)
-
         user.set_password(password)
-
         user.save()
-
-        Token.objects.create(user=user)
 
         return user
 
@@ -115,10 +119,10 @@ class UserLoginSerializer(serializers.Serializer):
             if not user:
                 # If we don't have a regular user, raise a ValidationError
                 msg = 'Access denied: wrong username or password.'
-                raise serializers.ValidationError(msg, code='authorization')
+                raise serializers.ValidationError(msg, status='authorization')
         else:
             msg = 'Both "username" and "password" are required.'
-            raise serializers.ValidationError(msg, code='authorization')
+            raise serializers.ValidationError(msg, status='authorization')
         # We have a valid user, put it in the serializer's validated_data.
         # It will be used in the view.
         attrs['user'] = user

@@ -38,11 +38,12 @@ class LoginView(APIView):
             username = serializer.data.get("username")
             password = serializer.data.get("password")
             if user := authenticate(username=username, password=password):
-                token = Token.objects.create(user=user)
+                token, created = Token.objects.get_or_create(user=user)
 
                 response = {
                     "message": "Login successfully!",
                     "token": token.key,
+                    "username": username
                 }
 
                 return Response(data=response, status=status.HTTP_200_OK)
@@ -51,7 +52,7 @@ class LoginView(APIView):
                                 status=status.HTTP_400_BAD_REQUEST)
 
 
-class RegisterUserView(generics.GenericAPIView):
+class RegisterView(generics.GenericAPIView):
     permission_classes([AllowAny])
     serializer_class = SignUpSerializer
 

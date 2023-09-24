@@ -4,6 +4,8 @@ from accounts.views.auth_views import *
 from accounts.views.accounts_views import *
 from accounts.views.cards_views import *
 
+app_name = 'accounts'
+
 urlpatterns = [
 
     ### auth
@@ -11,7 +13,7 @@ urlpatterns = [
     # http://localhost:8000/users/logout
     # http://localhost:8000/users/register
 
-    path('register', RegisterUserView.as_view(), name='register'),
+    path('register', RegisterView.as_view(), name='register'),
     path('login', LoginView.as_view(), name='login'),
     path('logout', LogoutView.as_view(), name='logout'),
 
