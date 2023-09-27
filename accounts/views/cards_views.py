@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import ValidationError
+
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -8,51 +8,22 @@ from rest_framework import status
 
 from accounts.models import Card
 from accounts.serializers import CardSerializer
+from accounts.utils import validate_card_number
 
 
 ### Card views
 
-def check_card_number(number):
-    """
-        Validate credit card number.
-        Return Boolean value
-    """
-    double = 0
-    total = 0
-    digits = str(number)
-    for i in range(len(digits) - 1, -1, -1):
-        for c in str((double + 1) * int(digits[i])):
-            total += int(c)
-        double = (double + 1) % 2
-    return (total % 10) == 0
-
-
-def validate_card_number(number):
-    """
-        Check if card number has valid number
-    """
-    if not check_card_number(number):
-        raise ValidationError("Card number is not valid, please rewrite one more time")
-    print("Card was checked, number is valid")
-    return number
-
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def all_cards(request: Request):
-
     """
         Get all cards, only for admin.
     """
-
     if request.method == 'GET':
-        try:
-            cards = Card.objects.all()
-        except Card.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
+        cards = Card.objects.all()
         serializer = CardSerializer(cards, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status.HTTP_200_OK)
 
 
 @api_view(['GET', 'POST'])
@@ -67,12 +38,17 @@ def all_user_cards(request: Request):
         except Card.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = CardSerializer(cards, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status.HTTP_200_OK)
 
     elif request.method == 'POST':
-        number = request.data['number']
-        serializer = CardSerializer(data=request.data)
-        # if serializer.is_valid() and validate_card_number(number):
+        data = {
+            'bank': request.data['bank'],
+            'number': request.data['number'],
+            'cvv': request.data['cvv'],
+            'deadline': request.data['deadline'],
+        }
+
+        serializer = CardSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -104,21 +80,18 @@ def get_user_card(request: Request, pk: int):
     elif request.method == 'PUT':
         number = request.data['number']
         serializer = CardSerializer(card, data=request.data)
-        if serializer.is_valid() and validate_card_number(number):
+        if serializer.is_valid():
+        # if serializer.is_valid() and validate_card_number(number):
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Handles PATCH method - update some fields
     elif request.method == 'PATCH':
         serializer = CardSerializer(card, data=request.data, partial=True)
         if serializer.is_valid():
-            number = request.data['number']
-            if number:
-                if validate_card_number(number):
-                    pass
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

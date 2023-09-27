@@ -1,10 +1,7 @@
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import User
 
-
-
 from rest_framework import serializers, status
-from rest_framework.authtoken.models import Token
 from rest_framework.validators import ValidationError
 
 from .models import Card, Account
@@ -64,19 +61,17 @@ class LoginSerializer(serializers.ModelSerializer):
 
 
 class CardSerializer(serializers.ModelSerializer):
+    """ """
     class Meta:
         model = Card
-        fields = ('id', 'number', 'cvv', 'deadline',)
+        fields = ('id', 'number', 'cvv', 'deadline')
 
     def create(self, validated_data):
         return Card(**validated_data)
 
 
 class AccountSerializer(serializers.ModelSerializer):
-    """
-
-
-    """
+    """    """
     user = SignUpSerializer(many=True)
     card = CardSerializer(required=False, many=True)
 

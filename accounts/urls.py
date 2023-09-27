@@ -24,23 +24,23 @@ urlpatterns = [
     ### accounts
     # http://localhost:8000/users/admin/accounts/
     # http://localhost:8000/users/workers/
-    path('admin/accounts/', all_accounts, name='all-accounts'),
+    path('admin/accounts/', all_accounts, name='all_accounts'),
     # path('workers', views.workers),
 
     # http://localhost:8000/users/admin/account/pk/
     # http://localhost:8000/users/account/
     # http://localhost:8000/users/account/add
-    path('admin/account/<int:pk>', get_account, name='get-account'),
-    path('account/', account_detail, name='account-detail'),
-    path('account/add', create_account, name='create-account'),
+    path('admin/account/<int:pk>', get_account, name='get_account'),
+    path('account/', account_detail, name='account_detail'),
+    path('account/add', create_account, name='create_account'),
 
     ### cards
     # http://localhost:8000/users/admin/cards/
     # http://localhost:8000/users/account/cards/
-    # http://localhost:8000/users/account/card/pk/
-    path('admin/cards', all_cards, name='all-cards'),
-    path('account/cards/', all_user_cards, name='all-user-cards'),
-    path('account/cards/<int:pk>', get_user_card, name='get-user-card'),
+    # http://localhost:8000/users/account/cards/pk/
+    path('admin/cards', all_cards, name='all_cards'),
+    path('account/cards/', all_user_cards, name='all_user_cards'),
+    path('account/cards/<int:pk>', get_user_card, name='get_user_card'),
 
 ]
 

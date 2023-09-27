@@ -1,114 +1,213 @@
+import json
+from datetime import *
+
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient, APIRequestFactory
+
+from django.contrib.auth.models import User
+from django.test import TestCase, Client
 from django.urls import reverse
-from rest_framework.test import APIClient, APITestCase
+from django.utils import timezone
 
-from ..serializers import *
+from ..models import Card
+from ..serializers import CardSerializer
+
+from faker import Faker
+
+faker = Faker()
 
 
-### Useful links
-# https://b0uh.github.io/djangodrf-how-to-authenticate-a-user-in-tests.html
-# https://webdevblog.ru/razrabotka-na-osnove-testov-django-restful-api/
-# https://github.com/encode/django-rest-framework/blob/master/tests/authentication/test_authentication.py
+class GetAllCardsTest(TestCase):
+    """ Test module for GET all cards API """
 
-class AuthTests(APITestCase):
-
+    # TODO: add admin authentication
     def setUp(self):
-        self.client = APIClient()
+        # self.admin = User.objects.create(username="admin", password="tatoda72")
         self.user = User.objects.create(
-            username='test_user',
-            password='qwerty##',
-            email='test_user@example.com'
+            email=faker.simple_profile()["mail"],
+            username=faker.simple_profile()["username"],
+            password=faker.pystr()
+        )
+        self.card = Card.objects.create(
+            bank='Test bank',
+            number=faker.credit_card_number(),
+            deadline=timezone.now(),
+            cvv=faker.credit_card_security_code(),
+            user=self.user
+        )
+        self.user2 = User.objects.create(
+            email=faker.simple_profile()["mail"],
+            username=faker.simple_profile()["username"],
+            password=faker.pystr()
+        )
+        self.card2 = Card.objects.create(
+            bank='Test bank',
+            number=faker.credit_card_number(),
+            deadline=timezone.now(),
+            cvv=faker.credit_card_security_code(),
+            user=self.user2
         )
 
-    def test_force_authenticate(self):
-        """test force_authenticate"""
-        self.client.force_authenticate(user=self.user)
-        self.token = Token.objects.create(user=self.user)
-        self.assertTrue(self.token.key)
-
-    def test_user_login(self):
-        """test user login"""
-        self.client.login(username=self.user.username, password=self.user.password)
-        self.token = Token.objects.create(user=self.user)
-        self.token.save()
-        self.assertTrue(self.token.key)
-
-
-"""
-class AuthTests(APITestCase, URLPatternsTestCase):
-    urlpatterns = [
-        path('users/', include('accounts.urls')),
-    ]
-
-    def test_create_user(self):
-        url = reverse('register')
-        data = {
-            "email": "test@example.com",
-            "username": "test",
-            "password": "qwerty##",
-            "password1": "qwerty##",
-        }
-
-        response = self.client.post(url, data, format='json')
-        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(User.objects.get().username, "test")
-"""
-
-
-# class LoginViewTest(TestCase):
-#     """ Test module for login views  """
-#
-#     # client.post('/notes/', {'title': 'new idea'}, format='json')
-#     # client.login(username='lauren', password='secret')
-#
-#     def setUp(self, password=None):
-#         self.user = get_user_model().objects.create_user(
-#             username='test',
-#             password='qwerty##',
-#             email='test@example.com'
-#         )
-#         self.user.save()
-#
-#     def test_valid_params(self):
-#         user = authenticate(username='test', password='qwerty##')
-#         token, created = Token.objects.get_or_create(user=user)
-#         # self.assertEqual(token.key, token.key)
-#         self.assertTrue((user is not None) and user.is_authenticated)
-#
-#     def test_wrong_password(self):
-#         user = authenticate(username='test', password='qwerty123')
-#         self.assertFalse((user is not None) and user.is_authenticated)
-#
-#     def test_wrong_username(self):
-#         user = authenticate(username='test__', password='qwerty123')
-#         self.assertFalse((user is not None) and user.is_authenticated)
-#
-#     def test_get_valid_register(self):
-#         pass
-#         # response = self.client.get(reverse('register'))
-#         #
-#         # users = User.objects.all()
-#         # serializer = SignUpSerializer(users)
-#         # self.assertEqual(response.data, serializer.data)
-#         # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-#
-#     def test_get_invalid_register(self):
-#         pass
-#
-#     def test_login(self):
-#         pass
-
-
-class CardsViewTest(APITestCase):
-
-    def setUp(self) -> None:
-        pass
-
     def test_get_all_cards(self):
-        pass
+        client = APIClient()
+        client.force_authenticate(self.user)
+
+        response = client.get(reverse('accounts:all_cards'))
+        cards = Card.objects.all()
+        serializer = CardSerializer(cards, many=True)
+
+        self.assertEqual(response.data, serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class GetUserCardsTest(TestCase):
+    """ Test module for GET all user cards API """
+
+    def setUp(self):
+        self.user = User.objects.create(
+            email=faker.simple_profile()["mail"],
+            username=faker.simple_profile()["username"],
+            password=faker.pystr()
+        )
+        self.card = Card.objects.create(
+            bank='Test bank',
+            number=faker.credit_card_number(),
+            deadline=timezone.now(),
+            cvv=faker.credit_card_security_code(),
+            user=self.user
+        )
 
     def test_get_all_user_cards(self):
-        pass
+        client = APIClient()
+        client.force_authenticate(self.user)
 
-    def test_get_user_card(self):
-        pass
+        response = client.get(reverse('accounts:all_user_cards'))
+        cards = Card.objects.filter(user=self.user)
+        serializer = CardSerializer(cards, many=True)
+
+        self.assertEqual(response.data, serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class GetSingleCardUpdateDeleteTest(TestCase):
+    """ Test module for GET single card, update card, delete card API """
+
+    # TODO:
+
+    def setUp(self) -> None:
+        self.user = User.objects.create(
+            email=faker.simple_profile()["mail"],
+            username=faker.simple_profile()["username"],
+            password=faker.pystr()
+        )
+        self.card = Card.objects.create(
+            bank='Test bank',
+            number=faker.credit_card_number(),
+            deadline=timezone.now(),
+            cvv=faker.credit_card_security_code(),
+            user=self.user
+        )
+        self.user2 = User.objects.create(
+            email=faker.simple_profile()["mail"],
+            username=faker.simple_profile()["username"],
+            password=faker.pystr()
+        )
+        self.card2 = Card.objects.create(
+            bank='Test bank',
+            number=faker.credit_card_number(),
+            deadline=timezone.now(),
+            cvv=faker.credit_card_security_code(),
+            user=self.user2
+        )
+
+        self.card_new_data = {
+            'bank': 'Test bank 2',
+            'number': faker.credit_card_number(),
+            'deadline': str(timezone.now()),
+            'cvv': faker.credit_card_security_code(),
+        }
+
+    def get_valid_single_card(self):
+        client = APIClient()
+        client.force_authenticate(self.user)
+
+        response = client.get(reverse(
+            'accounts:get_user_card',
+            kwargs={'pk': self.card.pk}
+        ))
+        card = Card.objects.get(pk=self.card.pk)
+        serializer = CardSerializer(card)
+        self.assertEqual(response.data, serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def get_invalid_single_card(self):
+        client = APIClient()
+        client.force_authenticate(self.user)
+
+        response = client.get(reverse(
+            'accounts:get_user_card',
+            kwargs={'pk': 5}
+        ))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_card(self):
+        client = APIClient()
+        client.force_authenticate(self.user)
+
+        response = client.put(reverse(
+            'accounts:get_user_card', kwargs={'pk': self.card.pk}
+            ), data=self.card_new_data)
+        card = Card.objects.get(pk=self.card.pk)
+        serializer = CardSerializer(card)
+        self.assertEqual(response.data, serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_partial_update_card(self):
+        client = APIClient()
+        client.force_authenticate(self.user)
+
+        response = client.patch(reverse(
+            'accounts:get_user_card', kwargs={'pk': self.card.pk}
+            ), data={'number': faker.credit_card_number()})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_card(self):
+        client = APIClient()
+        client.force_authenticate(self.user)
+
+        response = client.delete(reverse(
+            'accounts:get_user_card', kwargs={'pk': self.card.pk}
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class CreateNewCardTest(TestCase):
+    """ Test module for POST create card API """
+
+    def setUp(self) -> None:
+        self.user = User.objects.create(
+            email=faker.simple_profile()["mail"],
+            username=faker.simple_profile()["username"],
+            password=faker.pystr()
+        )
+
+        self.valid_card_params = {
+            'bank': 'Test bank',
+            'number': faker.credit_card_number(),
+            'deadline': str(timezone.now()),
+            'cvv': faker.credit_card_security_code(),
+        }
+
+    def test_create_card(self):
+        client = APIClient()
+        client.force_authenticate(self.user)
+
+        response = client.post(
+            '/users/account/cards/', self.valid_card_params, format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+

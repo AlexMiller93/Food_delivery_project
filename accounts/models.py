@@ -9,7 +9,7 @@ class Card(models.Model):
     bank = models.CharField(max_length=40, default='Bank New America')
     number = models.CharField(max_length=16)
     deadline = models.DateTimeField()
-    cvv = models.CharField(max_length=3)
+    cvv = models.CharField(max_length=4)
     user = models.ForeignKey(User,
                              blank=True,
                              null=True,
@@ -45,9 +45,7 @@ class Account(models.Model):
                               default='Male')
 
     address = models.CharField(max_length=100)
-    card = models.ForeignKey(Card,
-                             null=True,
-                             blank=True,
+    card = models.ForeignKey(Card, null=True, blank=True,
                              on_delete=models.CASCADE)
 
     def __str__(self):
