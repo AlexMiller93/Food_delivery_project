@@ -26,19 +26,13 @@ class SignUpSerializer(serializers.ModelSerializer):
         password1 = attrs.get('password1')
 
         if password != password1:
-            raise ValidationError(
-                detail="Passwords doesn't match", code=status.HTTP_403_FORBIDDEN
-            )
+            raise ValidationError(detail="Passwords doesn't match")
 
         if email_exists:
-            raise ValidationError(
-                detail="Email has already been used", code=status.HTTP_403_FORBIDDEN
-            )
+            raise ValidationError(detail="Email has already been used")
 
         if username_exists:
-            raise ValidationError(
-                detail="Username has already been used", code=status.HTTP_403_FORBIDDEN
-            )
+            raise ValidationError(detail="Username has already been used")
 
         return super().validate(attrs)
 

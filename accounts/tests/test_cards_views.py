@@ -1,19 +1,16 @@
-import json
 from datetime import *
 
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient, APIRequestFactory
-
 from django.contrib.auth.models import User
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from faker import Faker
+from rest_framework import status
+from rest_framework.test import APIClient
 
 from ..models import Card
 from ..serializers import CardSerializer
-
-from faker import Faker
+from ..utils import generate_valid_card_number
 
 faker = Faker()
 
@@ -31,7 +28,7 @@ class GetAllCardsTest(TestCase):
         )
         self.card = Card.objects.create(
             bank='Test bank',
-            number=faker.credit_card_number(),
+            number=generate_valid_card_number(),
             deadline=timezone.now(),
             cvv=faker.credit_card_security_code(),
             user=self.user
@@ -72,7 +69,7 @@ class GetUserCardsTest(TestCase):
         )
         self.card = Card.objects.create(
             bank='Test bank',
-            number=faker.credit_card_number(),
+            number=generate_valid_card_number(),
             deadline=timezone.now(),
             cvv=faker.credit_card_security_code(),
             user=self.user
@@ -103,7 +100,7 @@ class GetSingleCardUpdateDeleteTest(TestCase):
         )
         self.card = Card.objects.create(
             bank='Test bank',
-            number=faker.credit_card_number(),
+            number=generate_valid_card_number(),
             deadline=timezone.now(),
             cvv=faker.credit_card_security_code(),
             user=self.user
@@ -115,7 +112,7 @@ class GetSingleCardUpdateDeleteTest(TestCase):
         )
         self.card2 = Card.objects.create(
             bank='Test bank',
-            number=faker.credit_card_number(),
+            number=generate_valid_card_number(),
             deadline=timezone.now(),
             cvv=faker.credit_card_security_code(),
             user=self.user2
@@ -123,7 +120,7 @@ class GetSingleCardUpdateDeleteTest(TestCase):
 
         self.card_new_data = {
             'bank': 'Test bank 2',
-            'number': faker.credit_card_number(),
+            'number': generate_valid_card_number(),
             'deadline': str(timezone.now()),
             'cvv': faker.credit_card_security_code(),
         }
@@ -169,7 +166,7 @@ class GetSingleCardUpdateDeleteTest(TestCase):
 
         response = client.patch(reverse(
             'accounts:get_user_card', kwargs={'pk': self.card.pk}
-            ), data={'number': faker.credit_card_number()})
+            ), data={'number': generate_valid_card_number()})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_card(self):
@@ -195,7 +192,7 @@ class CreateNewCardTest(TestCase):
 
         self.valid_card_params = {
             'bank': 'Test bank',
-            'number': faker.credit_card_number(),
+            'number': generate_valid_card_number(),
             'deadline': str(timezone.now()),
             'cvv': faker.credit_card_security_code(),
         }
@@ -207,7 +204,6 @@ class CreateNewCardTest(TestCase):
         response = client.post(
             '/users/account/cards/', self.valid_card_params, format='json'
         )
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 

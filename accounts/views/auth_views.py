@@ -22,7 +22,7 @@ class LogoutView(APIView):
 
 
 class LoginView(APIView):
-    permission_classes = ([AllowAny])
+    permission_classes = ([])
 
     def get(self, request: Request):
         content = {
@@ -53,7 +53,7 @@ class LoginView(APIView):
 
 
 class RegisterView(generics.GenericAPIView):
-    permission_classes([AllowAny])
+    permission_classes = ([])
     serializer_class = SignUpSerializer
 
     def post(self, request: Request):
