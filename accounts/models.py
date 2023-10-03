@@ -6,6 +6,7 @@ from django.db import models
 
 
 class Card(models.Model):
+    objects = models.Manager()
     bank = models.CharField(max_length=40, default='Bank New America')
     number = models.CharField(max_length=16)
     deadline = models.DateTimeField()
@@ -20,6 +21,7 @@ class Card(models.Model):
 
 
 class Account(models.Model):
+    objects = models.Manager()
     USER_TYPES = (
         ('Customer', 'Customer'),
         ('Manager', 'Manager'),

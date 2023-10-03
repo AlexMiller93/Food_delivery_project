@@ -66,17 +66,17 @@ class CardSerializer(serializers.ModelSerializer):
 
 class AccountSerializer(serializers.ModelSerializer):
     """    """
-    user = SignUpSerializer(many=True)
-    card = CardSerializer(required=False, many=True)
+    user = SignUpSerializer(required=False, many=False)
+    card = CardSerializer(required=False, many=False)
 
     class Meta:
         model = Account
         fields = ['id', 'user', 'user_type', 'gender', 'address', 'points', 'card']
 
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        user = User.objects.create(**user_data)
-        account = Account.objects.create(user=user, **validated_data)
+        # user_data = validated_data.pop('user')
+        # user = User.objects.create(**user_data)
+        account = Account.objects.create(**validated_data)
         return account
 
 

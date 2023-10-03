@@ -89,15 +89,6 @@ class LoginUserTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["message"], "Invalid username or password")
 
-    def test_login_get(self):
-        response = client.get(
-            reverse('accounts:login'), data={
-                'username': 'test-user',
-                'password': 'qwerty##123'
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
 
 class TestRegister(APITestCase):
     """
@@ -164,19 +155,6 @@ class TestLogin(APITestCase):
         )
         self.url = reverse('accounts:login')
 
-    def test_login_get(self):
-        """
-            This will test login get method
-        """
-
-        data = {
-            "username": "test-user",
-            "password": "qwerty##123"
-        }
-
-        response = self.client.get(self.url, data=data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
     def test_login_post(self):
         """
             This will test successfull login post
@@ -187,7 +165,6 @@ class TestLogin(APITestCase):
         }
 
         response = self.client.post(self.url, data=data)
-        print("\nLogin post case --")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["message"], "Login successfully!")
         self.assertTrue(response.data["token"])

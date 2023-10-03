@@ -1,17 +1,41 @@
-from django.shortcuts import get_object_or_404
+from rest_framework import status, generics, permissions, authentication
 from rest_framework.decorators import api_view, permission_classes
-
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
-from rest_framework import status
+from rest_framework.response import Response
 
 from accounts.models import Card
 from accounts.serializers import CardSerializer
-from accounts.utils import validate_card_number
 
 
-### Card views
+class GetAllCardsView(generics.ListAPIView):
+    """ """
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [authentication.TokenAuthentication]
+    serializer_class = CardSerializer
+    queryset = Card.objects.all()
+
+
+class GetAllUserCardsView(generics.ListCreateAPIView):
+    """ """
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [authentication.TokenAuthentication]
+    serializer_class = CardSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get_queryset(self):
+        user_cards = Card.objects.filter(user=self.request.user)
+        return user_cards
+
+
+class GetUserCardView(generics.RetrieveUpdateDestroyAPIView):
+    """ """
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [authentication.TokenAuthentication]
+    serializer_class = CardSerializer
+    queryset = Card.objects.all()
 
 
 @api_view(['GET'])
@@ -81,7 +105,7 @@ def get_user_card(request: Request, pk: int):
         number = request.data['number']
         serializer = CardSerializer(card, data=request.data)
         if serializer.is_valid():
-        # if serializer.is_valid() and validate_card_number(number):
+            # if serializer.is_valid() and validate_card_number(number):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
