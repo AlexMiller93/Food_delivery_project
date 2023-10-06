@@ -1,5 +1,6 @@
 from datetime import *
 
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -18,37 +19,36 @@ faker = Faker()
 class GetAllCardsTest(TestCase):
     """ Test module for GET all cards API """
 
-    # TODO: add admin authentication
     def setUp(self):
-        # self.admin = User.objects.create(username="admin", password="tatoda72")
-        self.user = User.objects.create(
+        self.admin_user = User.objects.create(
             email=faker.simple_profile()["mail"],
             username=faker.simple_profile()["username"],
-            password=faker.pystr()
+            password=make_password(),
+            is_staff=True
         )
-        self.card = Card.objects.create(
+        self.admin_card = Card.objects.create(
             bank='Test bank',
             number=generate_valid_card_number(),
             deadline=timezone.now(),
             cvv=faker.credit_card_security_code(),
-            user=self.user
+            user=self.admin_user
         )
-        self.user2 = User.objects.create(
+        self.not_admin_user = User.objects.create(
             email=faker.simple_profile()["mail"],
             username=faker.simple_profile()["username"],
-            password=faker.pystr()
+            password=make_password()
         )
-        self.card2 = Card.objects.create(
+        self.card = Card.objects.create(
             bank='Test bank',
             number=faker.credit_card_number(),
             deadline=timezone.now(),
             cvv=faker.credit_card_security_code(),
-            user=self.user2
+            user=self.not_admin_user
         )
 
-    def test_get_all_cards(self):
+    def test_valid_get_all_cards(self):
         client = APIClient()
-        client.force_authenticate(self.user)
+        client.force_authenticate(self.admin_user)
 
         response = client.get(reverse('accounts:all_cards'))
         cards = Card.objects.all()
@@ -56,6 +56,13 @@ class GetAllCardsTest(TestCase):
 
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_invalid_get_all_cards(self):
+        client = APIClient()
+        client.force_authenticate(self.not_admin_user)
+        response = client.get(reverse('accounts:all_cards'))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class GetUserCardsTest(TestCase):
@@ -65,7 +72,7 @@ class GetUserCardsTest(TestCase):
         self.user = User.objects.create(
             email=faker.simple_profile()["mail"],
             username=faker.simple_profile()["username"],
-            password=faker.pystr()
+            password=make_password()
         )
         self.card = Card.objects.create(
             bank='Test bank',
@@ -90,13 +97,11 @@ class GetUserCardsTest(TestCase):
 class GetSingleCardUpdateDeleteTest(TestCase):
     """ Test module for GET single card, update card, delete card API """
 
-    # TODO:
-
     def setUp(self) -> None:
         self.user = User.objects.create(
             email=faker.simple_profile()["mail"],
             username=faker.simple_profile()["username"],
-            password=faker.pystr()
+            password=make_password(),
         )
         self.card = Card.objects.create(
             bank='Test bank',
@@ -108,7 +113,7 @@ class GetSingleCardUpdateDeleteTest(TestCase):
         self.user2 = User.objects.create(
             email=faker.simple_profile()["mail"],
             username=faker.simple_profile()["username"],
-            password=faker.pystr()
+            password=make_password(),
         )
         self.card2 = Card.objects.create(
             bank='Test bank',
@@ -154,7 +159,7 @@ class GetSingleCardUpdateDeleteTest(TestCase):
 
         response = client.put(reverse(
             'accounts:get_user_card', kwargs={'pk': self.card.pk}
-            ), data=self.card_new_data)
+        ), data=self.card_new_data)
         card = Card.objects.get(pk=self.card.pk)
         serializer = CardSerializer(card)
         self.assertEqual(response.data, serializer.data)
@@ -166,7 +171,7 @@ class GetSingleCardUpdateDeleteTest(TestCase):
 
         response = client.patch(reverse(
             'accounts:get_user_card', kwargs={'pk': self.card.pk}
-            ), data={'number': generate_valid_card_number()})
+        ), data={'number': generate_valid_card_number()})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_card(self):
@@ -175,7 +180,7 @@ class GetSingleCardUpdateDeleteTest(TestCase):
 
         response = client.delete(reverse(
             'accounts:get_user_card', kwargs={'pk': self.card.pk}
-            )
+        )
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -187,7 +192,7 @@ class CreateNewCardTest(TestCase):
         self.user = User.objects.create(
             email=faker.simple_profile()["mail"],
             username=faker.simple_profile()["username"],
-            password=faker.pystr()
+            password=make_password()
         )
 
         self.valid_card_params = {
@@ -205,5 +210,3 @@ class CreateNewCardTest(TestCase):
             '/users/account/cards/', self.valid_card_params, format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-

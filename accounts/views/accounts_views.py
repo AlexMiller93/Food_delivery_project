@@ -8,12 +8,12 @@ from rest_framework.views import APIView
 
 from ..models import Account
 from ..permissions import ManagerOrReadOnly
-from ..serializers import AccountSerializer
+from ..serializers import AccountSerializer, SignUpSerializer
 
 
 class AllAccountsView(generics.ListAPIView):
     """ """
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAdminUser]
     authentication_classes = [authentication.TokenAuthentication]
     serializer_class = AccountSerializer
     queryset = Account.objects.all()
@@ -21,18 +21,18 @@ class AllAccountsView(generics.ListAPIView):
 
 class AllWorkersView(generics.ListAPIView):
     """ """
-    permission_classes = [permissions.AllowAny]
-    authentication_classes = []
+    permission_classes = [permissions.IsAdminUser]
+    authentication_classes = [authentication.TokenAuthentication]
     serializer_class = AccountSerializer
 
     def get_queryset(self):
-        workers = Account.objects.filter('user_type' != 'Customer')
-        return workers
+        return Account.objects.filter(user_type__in=['Manager', 'Courier', 'Cook'])
 
 
 class AccountAdminView(generics.RetrieveDestroyAPIView):
     """ """
-    permission_classes = [permissions.AllowAny]
+    lookup_field = "pk"
+    permission_classes = [permissions.IsAdminUser]
     authentication_classes = [authentication.TokenAuthentication]
     serializer_class = AccountSerializer
     queryset = Account.objects.all()
@@ -51,10 +51,21 @@ class AccountCreateView(generics.CreateAPIView):
 
 class AccountDetailView(generics.RetrieveUpdateDestroyAPIView):
     """ """
+    lookup_field = "pk"
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [authentication.TokenAuthentication]
     serializer_class = AccountSerializer
-    queryset = Account.objects.all()
+
+    def get_queryset(self):
+        return Account.objects.filter(user=self.request.user)
+
+
+class AllUsersView(generics.ListAPIView):
+    """ """
+    permission_classes = [permissions.IsAdminUser]
+    authentication_classes = [authentication.TokenAuthentication]
+    serializer_class = SignUpSerializer
+    queryset = User.objects.all()
 
 '''
 @api_view(['GET'])

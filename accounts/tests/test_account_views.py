@@ -1,5 +1,6 @@
 import random
 
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -20,15 +21,36 @@ faker = Faker()
 class AccountsTest(TestCase):
     """ Test module for GET all accounts API """
 
-    # TODO: add admin authentication
     def setUp(self) -> None:
+        self.admin_user = User.objects.create(
+            email=faker.simple_profile()["mail"],
+            username=faker.simple_profile()["username"],
+            password=make_password(),
+            is_staff=True
+        )
+        self.admin_card = Card.objects.create(
+            bank='Test bank',
+            number=generate_valid_card_number(),
+            deadline=timezone.now(),
+            cvv=faker.credit_card_security_code(),
+            user=self.admin_user
+        )
+
+        self.admin_account = Account.objects.create(
+            user_type=random.choice(list(Account.USER_TYPES)),
+            points=faker.pyint(min_value=0, max_value=500, step=10),
+            gender=random.choice(list(Account.GENDERS)),
+            address=faker.simple_profile()["address"],
+            user=self.admin_user,
+            card=self.admin_card
+        )
         self.user = User.objects.create(
             email=faker.simple_profile()["mail"],
             username=faker.simple_profile()["username"],
-            password=faker.pystr(),
+            password=make_password(),
         )
         self.card = Card.objects.create(
-            bank='Test bank',
+            bank='Test bank 2',
             number=generate_valid_card_number(),
             deadline=timezone.now(),
             cvv=faker.credit_card_security_code(),
@@ -43,31 +65,10 @@ class AccountsTest(TestCase):
             user=self.user,
             card=self.card
         )
-        self.user2 = User.objects.create(
-            email=faker.simple_profile()["mail"],
-            username=faker.simple_profile()["username"],
-            password=faker.pystr(),
-        )
-        self.card2 = Card.objects.create(
-            bank='Test bank 2',
-            number=generate_valid_card_number(),
-            deadline=timezone.now(),
-            cvv=faker.credit_card_security_code(),
-            user=self.user2
-        )
-
-        self.account2 = Account.objects.create(
-            user_type=random.choice(list(Account.USER_TYPES)),
-            points=faker.pyint(min_value=0, max_value=500, step=10),
-            gender=random.choice(list(Account.GENDERS)),
-            address=faker.simple_profile()["address"],
-            user=self.user2,
-            card=self.card2
-        )
 
     def test_get_all_accounts(self):
         client = APIClient()
-        client.force_authenticate(self.user)
+        client.force_authenticate(self.admin_user)
 
         response = client.get(reverse('accounts:all_accounts'))
         accounts = Account.objects.all()
@@ -80,7 +81,7 @@ class AccountsTest(TestCase):
         # TODO: add admin authentication
 
         client = APIClient()
-        client.force_authenticate(self.user)
+        client.force_authenticate(self.admin_user)
 
         response = client.get(reverse(
             'accounts:get_account',
@@ -97,7 +98,7 @@ class AccountsTest(TestCase):
         # TODO: add admin authentication
 
         client = APIClient()
-        client.force_authenticate(self.user)
+        client.force_authenticate(self.admin_user)
 
         response = client.get(reverse(
             'accounts:get_account',
@@ -108,7 +109,7 @@ class AccountsTest(TestCase):
 
     def test_delete_account(self):
         client = APIClient()
-        client.force_authenticate(self.user)
+        client.force_authenticate(self.admin_user)
 
         response = client.delete(reverse(
             'accounts:get_account',
@@ -143,7 +144,7 @@ class AccountTest(APITestCase):
         self.user = User.objects.create(
             email=faker.simple_profile()["mail"],
             username=faker.simple_profile()["username"],
-            password=faker.pystr(),
+            password=make_password(),
         )
 
         self.card = Card.objects.create(
@@ -169,9 +170,6 @@ class AccountTest(APITestCase):
             "address": faker.simple_profile()["address"],
         }
         response = self.client.post(url, data, format='json')
-        print("\nCreate account")
-        print(response)
-        print(response.json())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Account.objects.count(), 1)
 

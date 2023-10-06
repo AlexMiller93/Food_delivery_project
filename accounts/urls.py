@@ -19,14 +19,14 @@ urlpatterns = [
 
     # --> users
     # http://localhost:8000/users/admin
-    # path('admin', all_users, name='all-users'),
+    path('admin', AllUsersView.as_view(), name='all_users'),
 
     # --> accounts CBV
     path('admin/accounts/', AllAccountsView.as_view(), name='all_accounts'),
     path('workers/', AllWorkersView.as_view(), name='all_workers'),
 
     path('admin/accounts/<int:pk>', AccountAdminView.as_view(), name='get_account'),
-    path('accounts/', AccountDetailView.as_view(), name='account_detail'),
+    path('accounts/<int:pk>', AccountDetailView.as_view(), name='account_detail'),
     path('accounts/add', AccountCreateView.as_view(), name='create_account'),
 
     # --> cards
@@ -35,8 +35,8 @@ urlpatterns = [
     # http://localhost:8000/users/account/cards/pk/
     ## CBV
     path('admin/cards', GetAllCardsView.as_view(), name='all_cards'),
-    path('account/cards/', GetAllUserCardsView.as_view(), name='all_user_cards'),
-    path('account/cards/<int:pk>', GetUserCardView.as_view(), name='get_user_card'),
+    path('accounts/cards/', GetAllUserCardsView.as_view(), name='all_user_cards'),
+    path('accounts/cards/<int:pk>', GetUserCardView.as_view(), name='get_user_card'),
 
     ## FBV
     # path('admin/cards', all_cards, name='all_cards'),

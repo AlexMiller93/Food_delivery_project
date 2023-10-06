@@ -10,7 +10,7 @@ from accounts.serializers import CardSerializer
 
 class GetAllCardsView(generics.ListAPIView):
     """ """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
     authentication_classes = [authentication.TokenAuthentication]
     serializer_class = CardSerializer
     queryset = Card.objects.all()
@@ -21,13 +21,13 @@ class GetAllUserCardsView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [authentication.TokenAuthentication]
     serializer_class = CardSerializer
+    queryset = Card.objects.all()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
     def get_queryset(self):
-        user_cards = Card.objects.filter(user=self.request.user)
-        return user_cards
+        return Card.objects.filter(user=self.request.user)
 
 
 class GetUserCardView(generics.RetrieveUpdateDestroyAPIView):

@@ -56,9 +56,11 @@ class LoginSerializer(serializers.ModelSerializer):
 
 class CardSerializer(serializers.ModelSerializer):
     """ """
+    user = SignUpSerializer(required=False, many=False)
+
     class Meta:
         model = Card
-        fields = ('id', 'number', 'cvv', 'deadline')
+        fields = ('id', 'number', 'cvv', 'deadline', 'user')
 
     def create(self, validated_data):
         return Card(**validated_data)
