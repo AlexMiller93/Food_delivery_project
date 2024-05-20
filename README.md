@@ -28,7 +28,7 @@ Test all urls with services Postman and Insomnia, and also with TestCase.
 ## Technologies
 Project is created with:
 * Django: 4.2.4
-* Вjango Rest Framework: 3.14.0
+* Django Rest Framework: 3.14.0
 * Faker
 
 ## Getting Started
